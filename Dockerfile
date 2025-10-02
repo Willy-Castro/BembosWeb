@@ -1,14 +1,21 @@
-# Imagen base con Java (Payara Micro necesita Java 11+)
-FROM openjdk:11-jdk
+# Etapa 1: Build con Ant
+FROM openjdk:8-jdk as build
+WORKDIR /app
 
-# Descargamos Payara Micro
-ADD https://repo1.maven.org/maven2/fish/payara/distributions/payara-micro/5.2021.10/payara-micro-5.2021.10.jar /opt/payara-micro.jar
+# Copiamos todo el proyecto
+COPY . .
 
-# Copiamos tu aplicación compilada (WAR)
-COPY build/BembosWeb.war /opt/BembosWeb.war
+# Ejecutamos el build de Ant
+RUN apt-get update && apt-get install -y ant && \
+    ant clean && ant
 
-# Exponemos el puerto de Payara (Render usará el 8080)
+# Etapa 2: Tomcat para desplegar
+FROM tomcat:9.0-jdk8
+# Eliminamos apps por defecto de Tomcat
+RUN rm -rf /usr/local/tomcat/webapps/*
+
+# Copiamos el WAR generado en build/ a Tomcat
+COPY --from=build /app/dist/BembosWeb.war /usr/local/tomcat/webapps/ROOT.war
+
 EXPOSE 8080
-
-# Comando para ejecutar el servidor
-CMD ["java", "-jar", "/opt/payara-micro.jar", "--deploy", "/opt/BembosWeb.war", "--port", "8080"]
+CMD ["catalina.sh", "run"]
