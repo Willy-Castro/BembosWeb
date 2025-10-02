@@ -1,5 +1,8 @@
-FROM payara/server-full:5.2021.10
+FROM tomcat:9.0-jdk8
 
-COPY dist/BembosWeb.war $DEPLOY_DIR
+RUN rm -rf /usr/local/tomcat/webapps/*
+
+COPY dist/BembosWeb.war /usr/local/tomcat/webapps/ROOT.war
 
 EXPOSE 8080
+CMD ["catalina.sh", "run"]
