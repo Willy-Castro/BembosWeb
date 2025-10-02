@@ -1,18 +1,18 @@
-# Etapa 1: Compilar con Ant
+# Etapa 1: Build con Ant
 FROM openjdk:8-jdk AS build
 WORKDIR /app
 
+# Copiamos el proyecto
 COPY . .
 
+# Instalamos Ant
 RUN apt-get update && apt-get install -y ant \
     && ant clean dist
 
-# Etapa 2: Tomcat para ejecutar la app
-FROM tomcat:9.0-jdk8
+# Etapa 2: Payara (sucesor de GlassFish)
+FROM payara/server-full:5.2021.10
 
-RUN rm -rf /usr/local/tomcat/webapps/*
-
-COPY --from=build /app/dist/BembosWeb.war /usr/local/tomcat/webapps/ROOT.war
+# Copiamos el WAR generado a Payara
+COPY --from=build /app/dist/BembosWeb.war $DEPLOY_DIR
 
 EXPOSE 8080
-CMD ["catalina.sh", "run"]
